@@ -21,38 +21,44 @@ class Database:
             conn.commit()
             print("Base de datos inicializada con éxito.")
 
-
     def get_user_by_username(self, username):
         """Busca un usuario en la base de datos y retorna sus datos."""
         query = "SELECT username, password_hash, rol FROM usuarios WHERE username = ?"
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (username,))
-            return cursor.fetchone() # Retorna una tupla (user, hash, rol) o None
+            return cursor.fetchone() 
         
     def get_resumen_dashboard(self):
-        """Obtiene datos clave para las tarjetas del Dashboard."""
+        """Mantiene tu lógica original para los totales."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            # Total ventas
             cursor.execute("SELECT SUM(total) FROM ventas")
             total_ventas = cursor.fetchone()[0] or 0
             
-            # Cantidad de productos
             cursor.execute("SELECT COUNT(*) FROM productos")
             total_productos = cursor.fetchone()[0] or 0
             
             return total_ventas, total_productos
-        
-    def get_stats_resumen(self):
+
+    # --- NUEVOS MÉTODOS PARA EL DASHBOARD MEJORADO ---
+
+    def get_alertas_stock(self):
+        """Consulta corregida para obtener productos con stock bajo."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            # Sumamos el total de todas las ventas
-            cursor.execute("SELECT SUM(total) FROM ventas")
-            total_dinero = cursor.fetchone()[0] or 0.0
-            
-            # Contamos cuántos productos diferentes tenemos
-            cursor.execute("SELECT COUNT(*) FROM productos")
-            total_productos = cursor.fetchone()[0] or 0
-            
-            return total_dinero, total_productos
+            cursor.execute("SELECT COUNT(*) FROM productos WHERE stock < 5")
+            return cursor.fetchone()[0] or 0
+
+    def get_ultimas_ventas(self, limite=5):
+        """Obtiene el historial para el monitor de actividad."""
+        query = """
+            SELECT v.fecha_venta, p.nombre, v.total 
+            FROM ventas v 
+            JOIN productos p ON v.producto_id = p.id 
+            ORDER BY v.fecha_venta DESC LIMIT ?
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (limite,))
+            return cursor.fetchall()
