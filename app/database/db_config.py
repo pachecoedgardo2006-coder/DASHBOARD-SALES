@@ -21,6 +21,7 @@ class Database:
             conn.commit()
             print("Base de datos inicializada con éxito.")
 
+
     def get_user_by_username(self, username):
         """Busca un usuario en la base de datos y retorna sus datos."""
         query = "SELECT username, password_hash, rol FROM usuarios WHERE username = ?"
@@ -42,7 +43,7 @@ class Database:
             total_productos = cursor.fetchone()[0] or 0
             
             return total_ventas, total_productos
-    
+        
     def get_stats_resumen(self):
         with self.get_connection() as conn:
             cursor = conn.cursor()
